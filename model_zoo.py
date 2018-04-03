@@ -11,6 +11,7 @@ sys.path.append('pretrained-models.pytorch')
 import pretrainedmodels
 
 def get_model(args):
+    net = None
     if 'resnet' in args.experiment:
         for resnet_conf in [18, 34, 50, 101, 152]:
             if args.experiment == 'resnet'+str(resnet_conf):

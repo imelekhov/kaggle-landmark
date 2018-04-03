@@ -25,11 +25,11 @@ import torch.utils.data as data
 import torch.backends.cudnn as cudnn
 
 from dataset import DistractorDataset
+from torch.utils.data import DataLoader
 from train_utils import train_epoch
 from val_utils import validate_epoch
 import model_zoo
 from augmentation import * 
-from estimate_mean_std import calc_mean_std
 import cv2
 from tensorboardX import SummaryWriter
 cv2.ocl.setUseOpenCL(False)
@@ -40,8 +40,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset',  default='data/')
+    parser.add_argument('--csv_path', default='csv_path/')
     parser.add_argument('--snapshots',  default='snapshots/')
-    parser.add_argument('--experiment',  default='resnet32')
+    parser.add_argument('--experiment',  default='resnet34')
     parser.add_argument('--start_val', type=int, default=-1)
     parser.add_argument('--logs', default='')
     #parser.add_argument('--fold', type=int, default=-1)
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--wd', type=float, default=1e-6)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--drop', type=float, default=0.5)
-    parser.add_argument('--bs', type=int, default=32)
+    parser.add_argument('--bs', type=int, default=16)
     parser.add_argument('--val_bs', type=int, default=8)
     parser.add_argument('--n_epoch', type=int, default=60)
     parser.add_argument('--n_batches', type=int, default=-1)
@@ -103,17 +104,17 @@ if __name__ == '__main__':
     ])
 
 
-    train_dataset = DistractorDataset(image_path=args.training_image_path,
+    train_dataset = DistractorDataset(image_path=args.dataset,
                                       csv_data_file=os.path.join(args.csv_path, 'distractor_train.csv'),
-                                      transforms=train_transforms)
-    val_dataset = DistractorDataset(image_path=args.training_image_path,
+                                      transform=train_transforms)
+    val_dataset = DistractorDataset(image_path=args.dataset,
                                     csv_data_file=os.path.join(args.csv_path, 'distractor_test.csv'),
-                                    transforms=test_transforms)
+                                    transform=val_transforms)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size,
+    train_dataloader = DataLoader(train_dataset, batch_size=args.bs,
                               shuffle=True, num_workers=args.n_threads)
 
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size,
+    val_dataloader = DataLoader(val_dataset, batch_size=args.bs,
                               shuffle=False, num_workers=args.n_threads)
 
 
@@ -121,7 +122,7 @@ if __name__ == '__main__':
     net = nn.DataParallel(net)
     net.cuda()
 
-    optimizer = optim.Adam(net.parameters(),lr=args.lr, weight_decay=args.wd)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, weight_decay=args.wd)
 
     # Scheduler
     scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 100], gamma=0.1)
