@@ -15,8 +15,9 @@ def validate_epoch(net, val_loader, criterion):
     n_batches = len(val_loader)
     sm = nn.Softmax(1)
     acc = np.zeros(n_batches)
+    pbar = tqdm(enumerate(val_loader), total=len(val_loader))
     
-    for i, sample in tqdm(enumerate(val_loader), total=len(val_loader)):
+    for i, sample in pbar:
         labels = Variable(sample['label'].long().cuda(), volatile=True)
         inputs = Variable(sample['img'].cuda(), volatile=True)
         
@@ -31,6 +32,7 @@ def validate_epoch(net, val_loader, criterion):
         acc[i] = accuracy_score(targets, preds)
 
         running_loss += loss.data.cpu().numpy()[0]
+        pbar.set_description('Running_loss: %.3f / total_loss: %.3f' % (running_loss / (i+1), loss.data.cpu().numpy()[0]))
         gc.collect()
     gc.collect()
 

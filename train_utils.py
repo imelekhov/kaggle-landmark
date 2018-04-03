@@ -11,8 +11,9 @@ def train_epoch(epoch, net, optimizer, train_loader, criterion, max_ep):
 
     running_loss = 0.0
     n_batches = len(train_loader)
+    pbar = tqdm(enumerate(train_loader), total=len(train_loader))
 
-    for i, sample in tqdm(enumerate(train_loader), total=len(train_loader)):
+    for i, sample in pbar:
         optimizer.zero_grad()
         # forward + backward + optimize
         labels = Variable(sample['label'].long().cuda(async=True))
@@ -26,14 +27,8 @@ def train_epoch(epoch, net, optimizer, train_loader, criterion, max_ep):
         optimizer.step()
 
         running_loss += loss.data.cpu().numpy()[0]
+        pbar.set_description('Running_loss: %.3f / total_loss: %.3f' % (running_loss / (i+1), loss.data.cpu().numpy()[0]))
 
-        """
-        print('[%d | %d, %5d / %d] | Running loss: %.3f / loss %.3f' % (epoch + 1,
-                                                                        max_ep, i + 1,
-                                                                        n_batches, 
-                                                                        running_loss / (i+1),
-                                                                        loss.data[0]))
-        """
         gc.collect()
     gc.collect()
 

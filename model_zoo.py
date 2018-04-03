@@ -14,7 +14,7 @@ def get_model(args):
     if 'resnet' in args.experiment:
         for resnet_conf in [18, 34, 50, 101, 152]:
             if args.experiment == 'resnet'+str(resnet_conf):
-                net = ResNet(resnet_conf, args.drop, 10)
+                net = ResNet(resnet_conf, args.drop, 3)
     elif 'inception' in args.experiment:
         for incept_conf in ['V3', 'V4']:
             if args.experiment == 'inception'+str(incept_conf):
