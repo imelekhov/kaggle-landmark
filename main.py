@@ -134,15 +134,15 @@ if __name__ == '__main__':
     val_acc = []
     prev_model = None
 
-    writer = SummaryWriter(os.path.join(args.logs, 'kaggle_landmark', 'fold_{}'.format(fold_id), cur_snapshot))
+    writer = SummaryWriter(os.path.join(args.logs, 'kaggle_landmark', cur_snapshot))
     for epoch in range(args.n_epoch):
-        print(colored('==> ', 'blue')+'Epoch:', epoch+1, fold_id, cur_snapshot)
+        print(colored('==> ', 'blue')+'Epoch:', epoch+1, cur_snapshot)
         # Adjusting learning rate using the scheduler
         scheduler.step()
         print(colored('==> ', 'red')+'LR:', scheduler.get_lr())
         # Training one epoch and measure the time
         start = time.time()
-        train_loss = train_epoch(epoch, net, optimizer, train_loader, criterion, args.n_epoch)
+        train_loss = train_epoch(epoch, net, optimizer, train_dataloader, criterion, args.n_epoch)
         epoch_time = np.round(time.time() - start,4)
         print(colored('==> ', 'green')+'Train loss:', train_loss)
         print(colored('==> ', 'green')+'Epoch training time: {} s.'.format(epoch_time))
@@ -151,7 +151,7 @@ if __name__ == '__main__':
         # in the beginning of the training
         if epoch >= args.start_val:
             start = time.time()
-            val_loss, acc = validate_epoch(net, val_loader, criterion)
+            val_loss, acc = validate_epoch(net, val_dataloader, criterion)
             val_time = np.round(time.time() - start, 4)
             #Displaying the results
             print(colored('==> ', 'green')+'Val loss:', val_loss)
@@ -163,16 +163,16 @@ if __name__ == '__main__':
             val_acc.append(acc)
             writer.add_scalars('Losses_camera', {'train':train_loss, 'val':val_loss}, epoch)
             writer.add_scalars('Accuracy_camera', {'val':acc}, epoch)
-        if not os.path.isdir(os.path.join(args.snapshots, cur_snapshot, 'fold_'+str(fold_id))):
-            os.mkdir(os.path.join(args.snapshots, cur_snapshot, 'fold_'+str(fold_id)))
+        if not os.path.isdir(os.path.join(args.snapshots, cur_snapshot)):
+            os.mkdir(os.path.join(args.snapshots, cur_snapshot))
 
             # Making logs backup
-        np.save(os.path.join(args.snapshots, cur_snapshot, 'fold_'+str(fold_id), 'logs.npy'), 
+        np.save(os.path.join(args.snapshots, cur_snapshot, 'logs.npy'), 
                [train_losses,val_losses,val_acc])
 
         if epoch > args.start_val:
             # We will be saving only the snapshot which has lowest loss value on the validation set
-            cur_snapshot_name = os.path.join(args.snapshots, cur_snapshot, 'fold_'+str(fold_id), 'epoch_{}.pth'.format(epoch+1))
+            cur_snapshot_name = os.path.join(args.snapshots, cur_snapshot, 'epoch_{}.pth'.format(epoch+1))
             if prev_model is None:
                 torch.save(net.module.state_dict(), cur_snapshot_name)
                 prev_model = cur_snapshot_name
@@ -186,36 +186,3 @@ if __name__ == '__main__':
                     prev_model = cur_snapshot_name
             
         gc.collect()
-
-
-    print(colored('==> ', 'blue')+'Initialized the datasplits....')
-    for fold_id, (train_index, test_index) in enumerate(skf.split(fname_train_shuffled, camera_id_train)):
-        if args.fold != -1 and fold_id != args.fold:
-            continue
-        X, X_val = fname_train_shuffled[train_index], fname_train_shuffled[test_index]
-        Y, Y_val = camera_id_train_shuffled[train_index], camera_id_train_shuffled[test_index]
-
-        train_ds = CameraClassificationTrainDataset(args.dataset, fname_split=X, classes_split=Y, transform=train_transforms, in_memory=args.in_memory)
-
-        train_loader = data.DataLoader(train_ds,
-                                           batch_size=args.bs,
-                                           num_workers=args.n_threads,
-                                           shuffle=True
-                                          )
-        # Validation set
-        val_ds = CameraClassificationTrainDataset(args.dataset, fname_split=X_val, classes_split=Y_val, transform=val_transforms, in_memory=args.in_memory)
-
-        val_loader = data.DataLoader(val_ds,
-                                     batch_size=args.val_bs,
-                                     num_workers=args.n_threads,
-                                    )
-
-        print(colored('==> ', 'blue')+'Initialized the loaders....')
-
-        
-        
-        train_started = time.time()
-        np.random.seed(args.seed)
-        
-
-    print(args.seed, 'Training took:', time.time()-train_started, 'seconds')

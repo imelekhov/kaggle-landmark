@@ -117,6 +117,7 @@ class ResNet(nn.Module):
             model = models.resnet18(pretrained=True)
         if layers == 34:
             model = models.resnet34(pretrained=True)
+            print('we are here!!!!')
         if layers == 50:
             model = models.resnet50(pretrained=True)
         if layers == 101:
