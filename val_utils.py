@@ -22,9 +22,9 @@ def validate_epoch(net, val_loader, criterion):
         inputs = Variable(sample['img'].cuda(), volatile=True)
         
         outputs = net(inputs)
-        
-        if inputs.size(0) != torch.cuda.device_count():
-            outputs = outputs.squeeze()
+
+        #if inputs.size(0) != torch.cuda.device_count():
+        #    outputs = outputs.squeeze()
         
         loss = criterion(outputs, labels)
         targets = sample['label'].numpy()

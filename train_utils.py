@@ -20,10 +20,8 @@ def train_epoch(epoch, net, optimizer, train_loader, criterion, max_ep):
         inputs = Variable(sample['img'].cuda(), requires_grad=True)
         
         outputs = net(inputs)
-        print(outputs.shape)
 
         loss = criterion(outputs, labels)
-        print('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu')
         
         loss.backward()
         optimizer.step()

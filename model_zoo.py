@@ -117,25 +117,24 @@ class ResNet(nn.Module):
             model = models.resnet18(pretrained=True)
         if layers == 34:
             model = models.resnet34(pretrained=True)
-            print('we are here!!!!')
         if layers == 50:
             model = models.resnet50(pretrained=True)
         if layers == 101:
             model = models.resnet101(pretrained=True)
         if layers == 152:
             model = models.resnet152(pretrained=True)
+
         self.encoder = list(model.children())[:-2]
         self.encoder.append(nn.AdaptiveAvgPool2d(1))
         self.encoder = nn.Sequential(*self.encoder)
         nfeats = 2048
         if layers < 50:
-            nfeats = 1024
+            nfeats = 512
 
         if drop > 0:
             self.classifier = nn.Sequential(nn.Dropout(drop), nn.Linear(nfeats, ncls))
         else:
             self.classifier = nn.Linear(nfeats, ncls)
-
 
     def forward(self, x):
         x = self.encoder(x)

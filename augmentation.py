@@ -61,7 +61,15 @@ def center_crop(img, size):
 
     img = img.copy()
     w, h = img.shape[1::-1]
-    
+
+    pad_w = 1
+    pad_h = 1
+    if size[0] - w > 1:
+        pad_w = np.uint16((size[0] - w)/2) + 1
+    if size[1] - h > 1:
+        pad_h = np.uint16((size[1] - h)/2) + 1
+    img_pad = cv2.copyMakeBorder(img,pad_h,pad_h,pad_w,pad_w,cv2.BORDER_CONSTANT,value=[0,0,0])
+    '''
     pad_w = 0
     pad_h = 0
     if w < size[0]:
@@ -69,6 +77,7 @@ def center_crop(img, size):
     if h < size[1]:
         pad_h = np.uint16((size[1] - h)/2)
     img_pad = cv2.copyMakeBorder(img,pad_h,pad_h,pad_w,pad_w,cv2.BORDER_CONSTANT,value=[0,0,0])
+    '''
     w, h = img_pad.shape[1::-1]
 
     x1 = w//2-size[0]//2
@@ -103,20 +112,25 @@ def augment_random_crop(img, size):
     
     img = img.copy()
     w, h = img.shape[1::-1]
-
-    pad_w = 0
-    pad_h = 0
-    if w < size[0]:
-        pad_w = np.uint16((size[0] - w)/2)
-    if h < size[1]:
-        pad_h = np.uint16((size[1] - h)/2)
+    
+    pad_w = 1
+    pad_h = 1
+    if size[0] - w > 1:
+        pad_w = np.uint16((size[0] - w)/2) + 1
+    if size[1] - h > 1:
+        pad_h = np.uint16((size[1] - h)/2) + 1
     img_pad = cv2.copyMakeBorder(img,pad_h,pad_h,pad_w,pad_w,cv2.BORDER_CONSTANT,value=[0,0,0])
 
     w, h = img_pad.shape[1::-1]
-    if w == size[0] and h == size[1]:
-        x1 = 0
-        y1 = 0
-    else:
+    
+
+    x1 = 0
+    y1 = 0
+    if (w == size[0] and h != size[1]):
+        y1 = random.randint(0, h - size[1])
+    elif (w != size[0] and h == size[1]):
+        x1 = random.randint(0, w - size[0])
+    elif (w != size[0] and h != size[1]):
         x1 = random.randint(0, w - size[0])
         y1 = random.randint(0, h - size[1])
 
